@@ -1,0 +1,30 @@
+{
+  "name": "query-gatekeeper",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+"scripts": {
+  "build": "tsc",
+  "test": "vitest run",
+  "test:watch": "vitest"
+},
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/lopes-matheusferreira/query-gatekeeper.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/lopes-matheusferreira/query-gatekeeper/issues"
+  },
+  "homepage": "https://github.com/lopes-matheusferreira/query-gatekeeper#readme",
+  "devDependencies": {
+    "ts-node": "^10.9.2",
+    "typescript": "^5.9.3",
+    "vitest": "^4.0.15"
+  },
+  "dependencies": {
+    "pgsql-ast-parser": "^12.0.1"
+  }
+}
