@@ -17,7 +17,7 @@ describe('readOnlyRule', () => {
   });
 
   it('should reject UPDATE when write operations are disabled', () => {
-    const sql = 'UPDATE users SET name = \\'x\\'';
+    const sql = "UPDATE users SET name = 'x'";
     const ast = parseSql(sql);
     const result = readOnlyRule.validate({
       sql,
@@ -31,7 +31,7 @@ describe('readOnlyRule', () => {
   });
 
   it('should allow UPDATE when write operations are enabled', () => {
-    const sql = 'UPDATE users SET name = \\'x\\'';
+    const sql = "UPDATE users SET name = 'x'";
     const ast = parseSql(sql);
     const result = readOnlyRule.validate({
       sql,
