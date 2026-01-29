@@ -1,30 +1,31 @@
-import { SqlRule, RuleResult } from '../types';
+import {
+  SqlValidationRule,
+  ValidationIssue
+} from '../domain';
+import { hasSelectStar } from './utils/ast';
 
-export const noSelectStarRule: SqlRule = {
+export const noSelectStarRule: SqlValidationRule = {
   name: 'no-select-star',
+  description: 'Warn or reject usage of SELECT *.',
 
-  validate(ast: any): RuleResult | null {
-    const statements = Array.isArray(ast) ? ast : [ast];
+  validate(context): ValidationIssue[] {
+    const severity =
+      context.options.selectStarSeverity ?? 'warning';
 
+    const statements = context.statements ?? [];
     for (const statement of statements) {
-      if (statement.type !== 'select') continue;
-
-      const columns = statement.columns ?? [];
-      
-      for (const column of columns) {
-        if (
-          column.expr?.type === 'ref' &&
-          column.expr.name === '*'
-        ) {
-          return {
+      if (hasSelectStar(statement)) {
+        return [
+          {
             code: 'SELECT_STAR_NOT_ALLOWED',
             message: 'Usage of SELECT * is not allowed.',
-            severity: 'error'
-          };
-        }
+            severity,
+            rule: this.name
+          }
+        ];
       }
     }
 
-    return null;
+    return [];
   }
 };

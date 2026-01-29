@@ -8,7 +8,7 @@ export function parseSql(query: string) {
   try {
     const ast = parse(query);
     return ast;
-  } catch (error) {
+  } catch (_error) {
     throw new Error('Invalid SQL syntax');
   }
 }
