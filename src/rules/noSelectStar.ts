@@ -20,7 +20,9 @@ export const noSelectStarRule: SqlValidationRule = {
             code: 'SELECT_STAR_NOT_ALLOWED',
             message: 'Usage of SELECT * is not allowed.',
             severity,
-            rule: this.name
+            rule: this.name,
+            suggestedFix:
+              'Replace SELECT * with explicit column names. Example: SELECT id, name, email FROM table_name'
           }
         ];
       }

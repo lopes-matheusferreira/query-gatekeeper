@@ -21,7 +21,9 @@ export const requireWhereRule: SqlValidationRule = {
               message:
                 'SELECT statements must include a WHERE clause.',
               severity: 'error',
-              rule: this.name
+              rule: this.name,
+              suggestedFix:
+                'Add a WHERE clause to filter results. Example: WHERE column_name = value'
             }
           ];
         }

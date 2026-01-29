@@ -9,3 +9,4 @@ export * from './riskyCrossJoin';
 export * from './riskyWhereTautology';
 export * from './sqlInjection';
 export * from './defaultRules';
+export * from './expensiveOperations';

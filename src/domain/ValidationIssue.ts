@@ -6,4 +6,5 @@ export interface ValidationIssue {
   severity: ValidationSeverity;
   rule: string;
   metadata?: Record<string, unknown>;
+  suggestedFix?: string;
 }

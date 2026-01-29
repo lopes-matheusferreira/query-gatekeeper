@@ -41,3 +41,10 @@ export function createQueryGatekeeperTool(
     return validateQuery(options);
   };
 }
+
+// Re-export the new LangChain tool
+export {
+  QueryGatekeeperTool,
+  createQueryGatekeeperTool as createLangChainTool
+} from './langchain-tool';
+export type { QueryGatekeeperToolOptions } from './langchain-tool';

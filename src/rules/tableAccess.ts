@@ -37,6 +37,7 @@ export const tableAccessRule: SqlValidationRule = {
             message: `Access to table "${table}" is blocked.`,
             severity: 'error',
             rule: this.name,
+            suggestedFix: `Table "${table}" is blocked. Choose a different table.`,
             metadata: {
               table
             }
@@ -53,6 +54,7 @@ export const tableAccessRule: SqlValidationRule = {
             message: `Access to table "${table}" is not allowed.`,
             severity: 'error',
             rule: this.name,
+            suggestedFix: `Use only allowed tables: ${allowed.join(', ')}`,
             metadata: {
               table
             }

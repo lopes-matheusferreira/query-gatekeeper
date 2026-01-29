@@ -1,5 +1,4 @@
 import { readFileSync } from 'node:fs';
-import { readFile } from 'node:fs/promises';
 import { ValidateQueryOptions } from '../domain';
 import { validateQuery } from '../core/validateQuery';
 
@@ -138,7 +137,7 @@ async function resolveSql(
     return null;
   }
 
-  const data = await readFile(0, 'utf-8');
+  const data = await readStdin();
   const trimmed = data.trim();
   return trimmed.length > 0 ? trimmed : null;
 }
@@ -157,6 +156,9 @@ function renderPretty(result: ReturnType<typeof validateQuery>) {
       lines.push(
         `- [${issue.rule}] ${issue.code}: ${issue.message}`
       );
+      if (issue.suggestedFix) {
+        lines.push(`  Fix: ${issue.suggestedFix}`);
+      }
     }
   }
 
@@ -167,6 +169,9 @@ function renderPretty(result: ReturnType<typeof validateQuery>) {
       lines.push(
         `- [${issue.rule}] ${issue.code}: ${issue.message}`
       );
+      if (issue.suggestedFix) {
+        lines.push(`  Suggestion: ${issue.suggestedFix}`);
+      }
     }
   }
 
@@ -179,4 +184,20 @@ function print(message: string) {
 
 function printError(message: string) {
   process.stderr.write(`${message}\n`);
+}
+
+function readStdin(): Promise<string> {
+  return new Promise((resolve, reject) => {
+    let data = '';
+    process.stdin.setEncoding('utf8');
+    process.stdin.on('data', (chunk) => {
+      data += chunk;
+    });
+    process.stdin.on('end', () => {
+      resolve(data);
+    });
+    process.stdin.on('error', (error) => {
+      reject(error);
+    });
+  });
 }

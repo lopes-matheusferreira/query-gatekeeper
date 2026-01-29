@@ -26,6 +26,7 @@ export const maxJoinsRule: SqlValidationRule = {
           message: `Query uses ${joinCount} joins, exceeding the maximum allowed (${maxJoins}).`,
           severity: 'error',
           rule: this.name,
+          suggestedFix: `Reduce the number of JOINs to ${maxJoins} or less. Consider breaking the query into smaller parts.`,
           metadata: {
             joinCount,
             maxJoins

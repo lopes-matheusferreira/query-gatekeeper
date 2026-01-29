@@ -1,4 +1,4 @@
-node_modules
-dist
-.env
-codex
+/node_modules
+/dist
+/.env
+/codex

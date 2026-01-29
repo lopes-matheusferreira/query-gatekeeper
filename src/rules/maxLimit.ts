@@ -29,6 +29,7 @@ export const maxLimitRule: SqlValidationRule = {
             'A LIMIT clause is required for this query.',
           severity: 'error',
           rule: this.name,
+          suggestedFix: `Add a LIMIT clause to your query. Example: ... LIMIT ${maxLimit}`,
           metadata: {
             maxLimit
           }
@@ -46,6 +47,8 @@ export const maxLimitRule: SqlValidationRule = {
             'The LIMIT value must be a constant number.',
           severity: 'error',
           rule: this.name,
+          suggestedFix:
+            'Use a constant number for LIMIT instead of a variable or expression',
           metadata: {
             maxLimit
           }
@@ -59,6 +62,7 @@ export const maxLimitRule: SqlValidationRule = {
           message: `LIMIT ${limitValue} exceeds the maximum allowed (${maxLimit}).`,
           severity: 'error',
           rule: this.name,
+          suggestedFix: `Reduce LIMIT to ${maxLimit} or less. Change LIMIT ${limitValue} to LIMIT ${maxLimit}`,
           metadata: {
             limitValue,
             maxLimit
