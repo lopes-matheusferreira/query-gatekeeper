@@ -1,7 +1,3 @@
-/**
- * Example: Creating and using custom validation rules
- */
-
 import { validateQuery } from '../src/core/validateQuery';
 import {
   SqlValidationRule,

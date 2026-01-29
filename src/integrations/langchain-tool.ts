@@ -57,7 +57,7 @@ Output: Validation report with pass/fail status and detailed feedback`;
     const lines: string[] = [];
 
     if (!result.isValid) {
-      lines.push('❌ VALIDATION FAILED - Query cannot be executed');
+      lines.push('VALIDATION FAILED - Query cannot be executed');
       lines.push('');
       lines.push('Errors:');
       for (const error of result.errors) {
@@ -69,7 +69,7 @@ Output: Validation report with pass/fail status and detailed feedback`;
       lines.push('');
       lines.push('You must fix these errors before executing the query.');
     } else if (result.warnings.length > 0) {
-      lines.push('⚠️  VALIDATION PASSED (with warnings)');
+      lines.push('VALIDATION PASSED (with warnings)');
       lines.push('');
       lines.push('Warnings:');
       for (const warning of result.warnings) {
@@ -83,7 +83,7 @@ Output: Validation report with pass/fail status and detailed feedback`;
         'Query is safe to execute, but consider addressing the warnings.'
       );
     } else {
-      lines.push('✅ VALIDATION PASSED');
+      lines.push('VALIDATION PASSED');
       lines.push('Query is safe to execute.');
     }
 

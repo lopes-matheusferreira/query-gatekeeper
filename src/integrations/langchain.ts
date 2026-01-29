@@ -42,7 +42,6 @@ export function createQueryGatekeeperTool(
   };
 }
 
-// Re-export the new LangChain tool
 export {
   QueryGatekeeperTool,
   createQueryGatekeeperTool as createLangChainTool

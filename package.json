@@ -1,17 +1,23 @@
 {
   "name": "query-gatekeeper",
   "version": "1.0.0",
-  "description": "",
+  "description": "SQL validation utilities for safe LLM-generated queries with LangChain integration",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
     "build": "tsc",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "prepublishOnly": "npm run build && npm test"
   },
   "bin": {
     "query-gatekeeper": "dist/cli/index.js"
   },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
   "repository": {
     "type": "git",
     "url": "git+https://github.com/lopes-matheusferreira/query-gatekeeper.git"
@@ -25,10 +31,16 @@
     "text-to-sql",
     "query-validation",
     "sql-injection",
-    "database-security"
+    "database-security",
+    "ai-safety",
+    "postgres",
+    "mysql",
+    "sqlite",
+    "sql-parser",
+    "query-safety"
   ],
-  "author": "",
-  "license": "ISC",
+  "author": "Matheus Lopes Ferreira",
+  "license": "MIT",
   "bugs": {
     "url": "https://github.com/lopes-matheusferreira/query-gatekeeper/issues"
   },
@@ -54,5 +66,8 @@
     "@langchain/core": {
       "optional": true
     }
+  },
+  "engines": {
+    "node": ">=18.0.0"
   }
 }

@@ -1,6 +1,18 @@
 # query-gatekeeper
 
-SQL validation utilities built on top of `pgsql-ast-parser`.
+[![npm version](https://badge.fury.io/js/query-gatekeeper.svg)](https://www.npmjs.com/package/query-gatekeeper)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Downloads](https://img.shields.io/npm/dm/query-gatekeeper.svg)](https://www.npmjs.com/package/query-gatekeeper)
+
+SQL validation utilities built on top of `pgsql-ast-parser` for safe LLM-generated queries.
+
+## Features
+
+✅ **Security First**: Block SQL injection, unauthorized table access, and dangerous operations  
+✅ **LLM-Friendly**: Provides suggested fixes for invalid queries to help LLMs self-correct  
+✅ **LangChain Integration**: Official LangChain tool for text-to-SQL workflows  
+✅ **Configurable Rules**: Customize validation with allow/deny lists, limits, and custom rules  
+✅ **Multiple Dialects**: Support for PostgreSQL, MySQL, SQLite, MSSQL, and generic SQL  
 
 ## Install
 
@@ -8,7 +20,7 @@ SQL validation utilities built on top of `pgsql-ast-parser`.
 npm install query-gatekeeper
 ```
 
-## Quick start
+## Quick Start
 
 ```ts
 import { validateQuery } from 'query-gatekeeper';
@@ -21,6 +33,12 @@ const result = validateQuery({
 });
 
 console.log(result);
+// {
+//   isValid: true,
+//   errors: [],
+//   warnings: [],
+//   normalizedSql: 'SELECT id, name FROM users WHERE id = 1 LIMIT 10'
+// }
 ```
 
 ## LangChain Integration
@@ -49,6 +67,8 @@ const result = await gatekeeper.invoke({
 });
 
 console.log(result);
+// ✅ VALIDATION PASSED
+// Query is safe to execute.
 ```
 
 ### Agent Workflow
@@ -71,19 +91,31 @@ See `examples/langchain-text-to-sql.ts` for a complete working example.
 
 Validates a SQL string against the default rules and any custom rules.
 
-Returns:
+**Options:**
+- `sql` (string): The SQL query to validate
+- `dialect` (string): 'postgres' | 'mysql' | 'sqlite' | 'mssql' | 'generic'
+- `allowedTables` (string[]): Whitelist of allowed tables
+- `blockedTables` (string[]): Blacklist of blocked tables
+- `allowWriteOperations` (boolean): Allow INSERT/UPDATE/DELETE (default: false)
+- `maxLimit` (number): Maximum LIMIT value and require LIMIT clause
+- `maxJoins` (number): Maximum number of JOIN clauses
+- `selectStarSeverity` ('error' | 'warning'): Severity for SELECT * (default: 'warning')
+- `customRules` (SqlValidationRule[]): Additional validation rules
 
-- `isValid`: boolean
-- `errors`: array of validation issues
-- `warnings`: array of validation issues
-- `normalizedSql`: normalized query string
+**Returns:**
+- `isValid` (boolean): Whether the query passed all validations
+- `errors` (ValidationIssue[]): Array of error-level issues
+- `warnings` (ValidationIssue[]): Array of warning-level issues
+- `normalizedSql` (string): Normalized query string
 
 ```ts
 import { validateQuery } from 'query-gatekeeper';
 
 const result = validateQuery({
   sql: 'SELECT id FROM users WHERE id = 1',
-  dialect: 'postgres'
+  dialect: 'postgres',
+  allowedTables: ['users'],
+  maxLimit: 100
 });
 ```
 
@@ -97,78 +129,112 @@ import { parseSql } from 'query-gatekeeper';
 const ast = parseSql('SELECT id FROM users WHERE id = 1');
 ```
 
-### Built-in rules
+### Built-in Validation Rules
 
-- `noSelectStarRule`: rejects `SELECT *` (configurable severity)
-- `requireWhereRule`: requires `WHERE` on `SELECT` (optional)
-- `readOnlyRule`: blocks DML/DDL by default
-- `singleStatementRule`: blocks multiple statements
-- `tableAccessRule`: enforces allow/deny list
-- `maxLimitRule`: enforces LIMIT and max value
-- `maxJoinsRule`: enforces maximum JOIN count
-- `riskyCrossJoinRule`: warns on CROSS JOIN without WHERE
-- `riskyWhereTautologyRule`: warns on `WHERE 1=1`
-- `sqlInjectionRule`: basic SQLi pattern detection
-- `expensiveOperationsRule`: warns about slow operations (optional)
+All rules include `suggestedFix` to help LLMs correct invalid queries:
 
-All rules now include `suggestedFix` to help LLMs correct invalid queries.
+- **noSelectStarRule**: Rejects or warns on `SELECT *` (configurable severity)
+- **requireWhereRule**: Requires `WHERE` clause on `SELECT` statements (optional)
+- **readOnlyRule**: Blocks DML/DDL operations by default
+- **singleStatementRule**: Blocks multiple statements in one query
+- **tableAccessRule**: Enforces allow/deny lists for table access
+- **maxLimitRule**: Enforces LIMIT clause and maximum value
+- **maxJoinsRule**: Enforces maximum JOIN count
+- **riskyCrossJoinRule**: Warns on CROSS JOIN without WHERE clause
+- **riskyWhereTautologyRule**: Warns on WHERE 1=1 and similar tautologies
+- **sqlInjectionRule**: Basic SQL injection pattern detection
+- **expensiveOperationsRule**: Warns about potentially slow operations (optional)
 
 ```ts
 import { noSelectStarRule, requireWhereRule } from 'query-gatekeeper';
 ```
 
-## Writing a custom rule
+## Writing Custom Rules
 
 ```ts
 import type { SqlValidationRule } from 'query-gatekeeper';
 
 export const noDeleteRule: SqlValidationRule = {
   name: 'no-delete',
+  description: 'Prevent DELETE statements',
+  
   validate(context) {
     const statements = context.statements ?? [];
 
     for (const statement of statements) {
       if (statement.type === 'delete') {
-        return {
+        return [{
           code: 'DELETE_NOT_ALLOWED',
           message: 'DELETE statements are not allowed.',
-          severity: 'error'
-        };
+          severity: 'error',
+          rule: this.name,
+          suggestedFix: 'Use SELECT queries only. DELETE operations are not permitted.'
+        }];
       }
     }
 
     return [];
   }
 };
-```
 
-## LangChain integration
-
-```ts
-import { createQueryGatekeeperTool } from 'query-gatekeeper';
-
-const gatekeeper = createQueryGatekeeperTool({
+// Use it
+const result = validateQuery({
+  sql: 'DELETE FROM users',
   dialect: 'postgres',
-  maxLimit: 100,
-  allowedTables: ['users', 'orders']
-});
-
-const result = await gatekeeper({
-  sql: 'SELECT id FROM users LIMIT 50'
+  customRules: [noDeleteRule]
 });
 ```
 
 ## CLI
 
 ```bash
+# Validate SQL from command line
 query-gatekeeper validate --sql "SELECT id FROM users LIMIT 10" --dialect postgres --format pretty
+
+# Or pipe from stdin
+echo "SELECT * FROM users" | query-gatekeeper validate --format json
+
+# Use a config file
+query-gatekeeper validate --sql "SELECT * FROM users" --config ./gatekeeper.json
 ```
 
-```bash
-echo "SELECT * FROM users" | query-gatekeeper validate --format json
+**Config file example** (`gatekeeper.json`):
+```json
+{
+  "dialect": "postgres",
+  "allowedTables": ["users", "orders"],
+  "maxLimit": 100,
+  "selectStarSeverity": "error"
+}
 ```
+
+## Examples
+
+Check the `examples/` directory for more usage patterns:
+
+- **langchain-text-to-sql.ts**: Complete LangChain integration example
+- **custom-rules.ts**: How to create custom validation rules
+
+## Use Cases
+
+- 🤖 **LLM Text-to-SQL Applications**: Validate AI-generated queries before execution
+- 🔒 **API Query Endpoints**: Protect your database from malicious queries
+- 📊 **BI Tools**: Enforce security policies on user-generated reports
+- 🧪 **Testing**: Validate SQL in your test suites
+- 📚 **Learning**: Teach SQL best practices with actionable feedback
 
 ## Notes
 
-- Parsing uses `pgsql-ast-parser`.
-- This project is still in progress; expect changes.
+- Parsing uses `pgsql-ast-parser` for PostgreSQL-compatible syntax
+- This project is actively maintained; expect regular updates
+- Contributions welcome! See [GitHub repository](https://github.com/lopes-matheusferreira/query-gatekeeper)
+
+## License
+
+MIT © Matheus Lopes Ferreira
+
+## Links
+
+- [GitHub Repository](https://github.com/lopes-matheusferreira/query-gatekeeper)
+- [NPM Package](https://www.npmjs.com/package/query-gatekeeper)
+- [Issue Tracker](https://github.com/lopes-matheusferreira/query-gatekeeper/issues)

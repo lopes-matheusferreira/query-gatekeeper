@@ -1,10 +1,3 @@
-/**
- * Example: Using Query Gatekeeper with LangChain for Text-to-SQL
- *
- * This example shows how to safely execute LLM-generated SQL queries
- * by validating them first with Query Gatekeeper.
- */
-
 import { ChatOpenAI } from '@langchain/openai';
 import { QueryGatekeeperTool } from '../src/integrations/langchain-tool';
 
