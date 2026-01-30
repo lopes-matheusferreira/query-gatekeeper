@@ -1,0 +1,22 @@
+{
+  "dialect": "postgres",
+  "enabledRules": [
+    "single-statement",
+    "read-only",
+    "table-access",
+    "max-limit",
+    "max-joins",
+    "no-select-star",
+    "cross-join-without-where",
+    "where-tautology",
+    "sql-injection-patterns",
+    "expensive-operations"
+  ],
+  "allowedTables": ["users", "orders"],
+  "blockedTables": ["secrets"],
+  "allowWriteOperations": false,
+  "maxLimit": 50,
+  "maxJoins": 1,
+  "selectStarSeverity": "error",
+  "enableExpensiveOperationsRule": true
+}

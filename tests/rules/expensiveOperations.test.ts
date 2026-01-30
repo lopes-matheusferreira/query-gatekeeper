@@ -23,7 +23,7 @@ describe('expensiveOperationsRule', () => {
 
   it('should warn on multiple OR conditions', () => {
     const sql =
-      'SELECT id FROM users WHERE a = 1 OR b = 2 OR c = 3';
+      'SELECT id FROM users WHERE a = 1 OR b = 2 OR c = 3 OR d = 4';
     const ast = parseSql(sql);
     const result = expensiveOperationsRule.validate({
       sql,

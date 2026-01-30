@@ -14,12 +14,14 @@ interface CliArgs {
 
 interface CliConfigFile {
   dialect?: ValidateQueryOptions['dialect'];
+  enabledRules?: string[];
   allowedTables?: string[];
   blockedTables?: string[];
   allowWriteOperations?: boolean;
   maxLimit?: number;
   maxJoins?: number;
   selectStarSeverity?: ValidateQueryOptions['selectStarSeverity'];
+  enableExpensiveOperationsRule?: boolean;
 }
 
 const HELP_TEXT = `
@@ -52,9 +54,23 @@ export async function runCli(
     ? loadConfig(args.configPath)
     : {};
 
+  const dialect =
+    args.dialect ?? config.dialect ?? 'generic';
+  if (!isValidDialect(dialect)) {
+    printError(
+      `Invalid dialect "${dialect}". Use postgres|mysql|sqlite|mssql|generic.`
+    );
+    process.exit(1);
+  }
+
+  const customRules = config.enableExpensiveOperationsRule
+    ? [require('../rules/expensiveOperations').expensiveOperationsRule]
+    : undefined;
+
   const options: ValidateQueryOptions = {
     sql,
-    dialect: args.dialect ?? config.dialect ?? 'generic',
+    dialect,
+    enabledRules: config.enabledRules ?? undefined,
     allowedTables:
       config.allowedTables ?? undefined,
     blockedTables:
@@ -64,7 +80,8 @@ export async function runCli(
     maxLimit: config.maxLimit ?? undefined,
     maxJoins: config.maxJoins ?? undefined,
     selectStarSeverity:
-      config.selectStarSeverity ?? undefined
+      config.selectStarSeverity ?? undefined,
+    customRules
   };
 
   const result = validateQuery(options);
@@ -184,6 +201,18 @@ function print(message: string) {
 
 function printError(message: string) {
   process.stderr.write(`${message}\n`);
+}
+
+function isValidDialect(
+  dialect: string
+): dialect is ValidateQueryOptions['dialect'] {
+  return [
+    'postgres',
+    'mysql',
+    'sqlite',
+    'mssql',
+    'generic'
+  ].includes(dialect);
 }
 
 function readStdin(): Promise<string> {

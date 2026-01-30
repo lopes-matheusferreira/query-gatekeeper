@@ -5,6 +5,7 @@ import { ValidationSeverity } from './ValidationIssue';
 export interface ValidateQueryOptions {
   sql: string;
   dialect: SqlDialect;
+  enabledRules?: string[];
   allowedTables?: string[];
   blockedTables?: string[];
   allowWriteOperations?: boolean;

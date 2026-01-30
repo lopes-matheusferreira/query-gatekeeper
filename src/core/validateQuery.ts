@@ -39,10 +39,16 @@ export function validateQuery(
     });
   }
 
-  const rules = [
+  const allRules = [
     ...defaultRules(),
     ...(options.customRules ?? [])
   ];
+  const enabledRules = options.enabledRules;
+  const rules = enabledRules
+    ? allRules.filter((rule) =>
+        enabledRules.includes(rule.name)
+      )
+    : allRules;
 
   if (issues.length === 0) {
     for (const rule of rules) {

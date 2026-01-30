@@ -41,6 +41,46 @@ console.log(result);
 // }
 ```
 
+## Como usar (CLI)
+
+Você pode executar o validador via CLI apontando para um arquivo de configuração.
+
+Exemplo de `config.json`:
+```json
+{
+  "dialect": "postgres",
+  "enabledRules": [
+    "single-statement",
+    "read-only",
+    "table-access",
+    "max-limit",
+    "max-joins",
+    "no-select-star",
+    "cross-join-without-where",
+    "where-tautology",
+    "sql-injection-patterns",
+    "expensive-operations"
+  ],
+  "allowedTables": ["users", "orders"],
+  "blockedTables": ["secrets"],
+  "allowWriteOperations": false,
+  "maxLimit": 50,
+  "maxJoins": 1,
+  "selectStarSeverity": "error",
+  "enableExpensiveOperationsRule": true
+}
+```
+
+Executar:
+```
+node dist/cli/index.js validate --sql "SELECT id FROM users LIMIT 10" --config config.json --format pretty
+```
+
+Observações:
+- `dialect` aceita apenas: `postgres`, `mysql`, `sqlite`, `mssql`, `generic`.
+- `enabledRules` define exatamente quais regras serão aplicadas.
+- `enableExpensiveOperationsRule` ativa a regra opcional `expensive-operations`.
+
 ## LangChain Integration
 
 Query Gatekeeper integrates seamlessly with LangChain for safe text-to-SQL applications.
@@ -94,6 +134,7 @@ Validates a SQL string against the default rules and any custom rules.
 **Options:**
 - `sql` (string): The SQL query to validate
 - `dialect` (string): 'postgres' | 'mysql' | 'sqlite' | 'mssql' | 'generic'
+- `enabledRules` (string[]): Lista de nomes de regras a executar
 - `allowedTables` (string[]): Whitelist of allowed tables
 - `blockedTables` (string[]): Blacklist of blocked tables
 - `allowWriteOperations` (boolean): Allow INSERT/UPDATE/DELETE (default: false)
@@ -148,6 +189,19 @@ All rules include `suggestedFix` to help LLMs correct invalid queries:
 ```ts
 import { noSelectStarRule, requireWhereRule } from 'query-gatekeeper';
 ```
+
+### Como cada regra funciona
+
+- `single-statement`: rejeita múltiplos comandos na mesma string (`;`).
+- `read-only`: bloqueia DML/DDL quando `allowWriteOperations` é `false`.
+- `table-access`: permite apenas `allowedTables` e bloqueia `blockedTables`.
+- `max-limit`: exige `LIMIT` e verifica se não ultrapassa `maxLimit`.
+- `max-joins`: rejeita quando o número de JOINs excede `maxJoins`.
+- `no-select-star`: gera warning/erro para `SELECT *` (configurável).
+- `cross-join-without-where`: warning para `CROSS JOIN` sem `WHERE`.
+- `where-tautology`: warning para `WHERE 1=1`.
+- `sql-injection-patterns`: bloqueia padrões simples de SQLi (`OR 1=1`, comentários, query empilhada).
+- `expensive-operations`: warning para LIKE com `%` inicial, muitos ORs, e funções no WHERE.
 
 ## Writing Custom Rules
 

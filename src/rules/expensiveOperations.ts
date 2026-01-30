@@ -62,19 +62,65 @@ export const expensiveOperationsRule: SqlValidationRule = {
 };
 
 function checkForLeadingWildcard(select: any): boolean {
-  const whereStr = JSON.stringify(select.where || {});
-  return /LIKE.*['"]%/.test(whereStr);
+  let found = false;
+  walkExpr(select.where, (node) => {
+    if (
+      node?.type === 'binary' &&
+      (node.op === 'LIKE' || node.op === 'ILIKE') &&
+      node.right?.type === 'string' &&
+      typeof node.right.value === 'string' &&
+      node.right.value.startsWith('%')
+    ) {
+      found = true;
+    }
+  });
+  return found;
 }
 
 function checkForMultipleOrs(select: any): boolean {
-  const whereStr = JSON.stringify(select.where || {});
-  const orCount = (whereStr.match(/\bOR\b/gi) || []).length;
-  return orCount >= 3;
+  let count = 0;
+  walkExpr(select.where, (node) => {
+    if (node?.type === 'binary' && node.op === 'OR') {
+      count += 1;
+    }
+  });
+  return count >= 3;
 }
 
 function checkForFunctionInWhere(select: any): boolean {
-  const whereStr = JSON.stringify(select.where || {});
-  return /\b(UPPER|LOWER|SUBSTRING|CONCAT|CAST)\s*\(/.test(
-    whereStr
-  );
+  const functions = new Set([
+    'upper',
+    'lower',
+    'substring',
+    'concat',
+    'cast'
+  ]);
+  let found = false;
+  walkExpr(select.where, (node) => {
+    if (
+      node?.type === 'call' &&
+      node.function?.name &&
+      functions.has(String(node.function.name).toLowerCase())
+    ) {
+      found = true;
+    }
+  });
+  return found;
+}
+
+function walkExpr(
+  expr: any,
+  visit: (node: any) => void
+) {
+  if (!expr || typeof expr !== 'object') return;
+  visit(expr);
+  for (const value of Object.values(expr)) {
+    if (Array.isArray(value)) {
+      for (const item of value) {
+        walkExpr(item, visit);
+      }
+    } else if (value && typeof value === 'object') {
+      walkExpr(value, visit);
+    }
+  }
 }
